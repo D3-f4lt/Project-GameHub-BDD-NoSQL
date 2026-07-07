@@ -98,6 +98,18 @@ services:
     container_name: gamehub_app
     working_dir: /app
 
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: gamehub_user
+      POSTGRES_PASSWORD: gamehub_password
+      POSTGRES_DB: gamehub
+      MONGO_URL: mongodb://mongo:27017
+      REDIS_URL: redis://redis:6379
+      NEO4J_URL: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: gamehub_password
+
     volumes:
       - ./app:/app
 

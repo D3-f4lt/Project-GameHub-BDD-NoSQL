@@ -1,0 +1,58 @@
+const express = require("express");
+
+const postgres = require("./db/postgres");
+const mongo = require("./db/mongo");
+const redis = require("./db/redis");
+const neo4j = require("./db/neo4j");
+
+const usersRoutes = require("./routes/users");
+const achievementsRoutes = require("./routes/achievements");
+const activityRoutes = require("./routes/activity");
+const socialRoutes = require("./routes/social");
+const dashboardRoutes = require("./routes/dashboard");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+async function start() {
+  // On se connecte aux 4 BDD avant de démarrer le serveur : si l'une
+  // d'elles n'est pas prête, on le sait tout de suite au lancement
+  // plutôt qu'au moment d'une requête.
+  await postgres.connect();
+  await mongo.connect();
+  await redis.connect();
+  await neo4j.connect();
+
+  app.use("/users", usersRoutes);
+  app.use("/", achievementsRoutes);
+  app.use("/", activityRoutes);
+  app.use("/", socialRoutes);
+  app.use("/", dashboardRoutes);
+
+  app.get("/", (req, res) => {
+    res.json({
+      message: "GameHub API",
+      routes: [
+        "GET /users",
+        "GET /users/:id/games",
+        "GET /users/:id/achievements",
+        "GET /users/:id/status",
+        "GET /users/:id/friends",
+        "GET /users/:id/recommendations",
+        "GET /users/:id/dashboard",
+        "GET /games/:id/achievements",
+        "GET /activity/recent",
+        "GET /leaderboard",
+      ],
+    });
+  });
+
+  app.listen(PORT, () => {
+    console.log(`GameHub API démarrée sur le port ${PORT}`);
+  });
+}
+
+start().catch((err) => {
+  console.error("Échec du démarrage :", err);
+  process.exit(1);
+});
