@@ -1,0 +1,113 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: gamehub_postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: gamehub
+      POSTGRES_USER: gamehub_user
+      POSTGRES_PASSWORD: gamehub_password
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  mongo:
+    image: mongo:8
+    container_name: gamehub_mongo
+    restart: unless-stopped
+
+    environment:
+      MONGO_INITDB_DATABASE: gamehub
+
+    ports:
+      - "27017:27017"
+
+  mongo-seed:
+    image: mongo:8
+    container_name: gamehub_mongo_seed
+
+    depends_on:
+      - mongo
+
+    volumes:
+      - ./mongo/seed.js:/seed.js
+      - ./mongo/seed.sh:/seed.sh
+
+    command: sh /seed.sh
+
+    restart: "no"
+
+  redis:
+    image: redis:8
+    container_name: gamehub_redis
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+  redis-seed:
+    image: redis:8
+    container_name: gamehub_redis_seed
+
+    depends_on:
+      - redis
+
+    volumes:
+      - ./redis/seed.sh:/seed.sh
+
+    command: sh /seed.sh
+
+    restart: "no"
+
+  neo4j:
+    image: neo4j:2025
+    container_name: gamehub_neo4j
+    restart: unless-stopped
+
+    environment:
+      NEO4J_AUTH: neo4j/gamehub_password
+
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+
+  neo4j-seed:
+    image: neo4j:2025
+    container_name: gamehub_neo4j_seed
+
+    depends_on:
+      - neo4j
+
+    volumes:
+      - ./neo4j/seed.cypher:/seed.cypher
+      - ./neo4j/seed.sh:/seed.sh
+
+    command: sh /seed.sh
+
+    restart: "no"
+
+  app:
+    image: node:22
+    container_name: gamehub_app
+    working_dir: /app
+
+    volumes:
+      - ./app:/app
+
+    command: sh -c "npm install && node index.js"
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      - postgres
+      - mongo-seed
+      - redis-seed
+      - neo4j-seed
