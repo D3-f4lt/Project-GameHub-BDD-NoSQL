@@ -1,5 +1,5 @@
 # Project-GameHub-BDD-NoSQL
-Pour notre porjet d'étude en Base de Données NoSQL, nous avons opté pour GameHub.
+Pour notre projet d'étude en Base de Données NoSQL, nous avons opté pour GameHub.
 
 L’objectif de l’application est de permettre à un utilisateur de consulter les jeux qu’il possède, quelle que soit leur plateforme d’origine simulée : Steam, Epic Games, GOG, PlayStation ou Xbox. L’utilisateur peut également visualiser sa progression dans chaque jeu, consulter les achievements disponibles, voir son activité récente, connaître le statut de ses amis et obtenir des recommandations de jeux.
 
