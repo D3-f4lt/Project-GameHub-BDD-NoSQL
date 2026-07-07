@@ -1,9 +1,3 @@
-Pour un projet comme le vôtre, le **README est la première chose que le correcteur va lire**. Il doit lui permettre de comprendre le projet et de le lancer **sans avoir à vous poser de questions**.
-
-Je structurerais le README comme suit.
-
----
-
 # GameHub – Projet Bases de Données NoSQL
 
 ## Présentation
