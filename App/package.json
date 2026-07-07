@@ -1,0 +1,55 @@
+const express = require("express");
+const router = express.Router();
+const { pool } = require("../db/postgres");
+const { getDb } = require("../db/mongo");
+const { client } = require("../db/redis");
+const { getSession } = require("../db/neo4j");
+
+// GET /users/:id/dashboard
+// Une seule route qui interroge les 4 BDD et assemble le résultat :
+//   - PostgreSQL : les jeux possédés
+//   - MongoDB    : les achievements débloqués
+//   - Redis      : le statut en ligne
+//   - Neo4j      : les amis
+// C'est la route qui démontre le mieux l'intérêt de l'architecture polyglotte.
+router.get("/users/:id/dashboard", async (req, res) => {
+  const id = req.params.id;
+  const userId = parseInt(id, 10);
+  const session = getSession();
+
+  try {
+    const [gamesResult, unlockedAchievements, status, friendsResult] =
+      await Promise.all([
+        pool.query(
+          `SELECT g.id AS game_id, g.title, p.name AS platform, ug.completion_percent
+           FROM user_games ug
+           JOIN games g ON g.id = ug.game_id
+           JOIN platforms p ON p.id = ug.platform_id
+           WHERE ug.user_id = $1`,
+          [userId]
+        ),
+        getDb().collection("user_achievements").find({ userId }).toArray(),
+        client.get(`user:${id}:status`),
+        session.run(
+          `MATCH (u:User {id: $userId})-[:FRIEND]->(friend:User)
+           RETURN friend.id AS id, friend.name AS name`,
+          { userId }
+        ),
+      ]);
+
+    res.json({
+      userId,
+      status: status || "unknown",
+      games: gamesResult.rows,
+      achievements: unlockedAchievements,
+      friends: friendsResult.records.map((r) => r.toObject()),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur lors de l'assemblage du dashboard" });
+  } finally {
+    await session.close();
+  }
+});
+
+module.exports = router;
