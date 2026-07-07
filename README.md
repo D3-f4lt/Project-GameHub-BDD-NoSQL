@@ -35,7 +35,7 @@ Présenter rapidement le rôle de chaque base.
 ```text
 GameHub-nosql/
 │
-├── App/
+├── app/
 │
 ├── postgres/
 │   └── init.sql
